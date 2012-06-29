@@ -30,19 +30,19 @@ public class Message {
         this.messageCommand = messageCommand;
         this.blocks = blocks;
     }
-    
+
     /**
      * message command its number between 0 and 65535 (inclusive)
-     * 
+     *
      * @return message command as integer
      */
     public int getMessageCommand() {
         return messageCommand;
     }
-    
+
     /**
      * blocks of this message, its not matter on order
-     * 
+     *
      * @return blocks as array list
      */
     public ArrayList<Block> getBlocks() {
