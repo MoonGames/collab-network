@@ -1,0 +1,33 @@
+\documentclass[12pt,oneside,a4paper]{report} 
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{supertabular}
+\usepackage{comment}
+% right header      
+\rhead{Moon Games}
+% left header
+\lhead{Collab network protocol}
+% centered footer
+\cfoot{\thepage}
+% use this style
+\pagestyle{fancy}
+
+% capter style
+\makeatletter
+\def\@makechapterhead#1{
+{\parindent \z@ \raggedright \normalfont
+\interlinepenalty\@M
+\LARGE \bfseries \thechapter\ #1\par\nobreak
+\vskip 30\p@
+}}
+\makeatother
+
+
+\begin{document}
+
+This is collab network protocol documentation.
+
+\end{document}
