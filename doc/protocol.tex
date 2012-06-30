@@ -52,8 +52,6 @@ Veškerý text je kódován jako UTF-8.
 
 \section{Message}
 
-% TODO: insert ilustrating image
-
 Zpráva začíná čtyřmi byty udávající délku celé zprávy (neznaménkové číslo) bez těchto prních čtyř.
 
 Po načtení délky zprávy se načté právě tolik dalších bytů, které se následně zpracovávají.
@@ -69,6 +67,15 @@ Obsah message je tedy následující:
 	\item command (2\,{}B)
 	\item blocks (message length - 2 B)
 \end{enumerate}
+
+Obsah zprávy je také ilustrován diagramem \ref{picture.message_structure}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.80\textwidth]{diagrams/message_structure_diagram.png}
+  \caption{Message structure diagram}
+  \label{picture.message_structure}
+\end{figure}
 
 \section{Block}
 \label{text.collab_message.block}
@@ -95,19 +102,38 @@ Seznam příkazů a jejich číselných hodnot:
 
 \begin{itemize}
 	\item Paint: 1
+	\item Layers order: 12
+	\item Add layer: 11
 \end{itemize}
 
 \section{Příchozí}
 
 \section{Odchozí}
 
+\subsection{Add layer}
+
+Přidá vrstvu do plátna. Obsahuje tyto bloky:
+
+\begin{itemize}
+	\item Layer position: 1
+	\item Layer name: 2
+	\item Canvas ID: 3
+\end{itemize}
+
+\paragraph{Layer position}
+Obsahuje celočíselné čtyřbytové bezznaménkové číslo, které udává kolikátá v pořadí bude vrstva od spoda po přidání. Vrstva na pozici $0$ bude pod všemi ostatními.
+
+\paragraph{Layer name}
+Obsahuje text s názvem vrstvy.
+
+\paragraph{Canvas ID}
+Obsahuje celočíslené bezznaménkové čtyřbytové číslo s ID plátna, do kterého má být vrstva přidána.
+
 \section{Obousměrné}
 
 \subsection{Paint}
 
-Tento příkaz informuje o aktualizaci kreslícího plátna.
-
-Obsahuje tyto bloky (uváděné s jejich ID):
+Tento příkaz informuje o aktualizaci kreslícího plátna. Obsahuje tyto bloky:
 
 \begin{itemize}
 	\item Update type: 1
