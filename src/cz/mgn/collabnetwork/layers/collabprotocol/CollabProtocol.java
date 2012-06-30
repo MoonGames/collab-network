@@ -4,14 +4,17 @@
  */
 package cz.mgn.collabnetwork.layers.collabprotocol;
 
-import cz.mgn.collabnetwork.layers.collabprotocol.data.Message;
 import cz.mgn.collabnetwork.layers.collabprotocol.data.PaintUpdate;
+import cz.mgn.collabnetwork.layers.networkprotocol.NetworkProtocol;
+import cz.mgn.collabnetwork.layers.networkprotocol.data.Message;
 import cz.mgn.collabnetwork.utils.BinaryUtil;
 import java.util.ArrayList;
 
 /**
  *
  * @author indy
+ *
+ * collab protocol layer
  */
 public class CollabProtocol {
 
@@ -23,6 +26,19 @@ public class CollabProtocol {
     public static final int COMMAND_PAINT_BLOCK_X_COORDINATE = 5;
     public static final int COMMAND_PAINT_BLOCK_Y_COORDINATE = 6;
     public static final int COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA = 7;
+    /**
+     * lower layer
+     */
+    protected NetworkProtocol networkProtocol;
+
+    /**
+     * initize collab protocol layer
+     *
+     * @param networkProtocol network protocol layer
+     */
+    public CollabProtocol(NetworkProtocol networkProtocol) {
+        this.networkProtocol = networkProtocol;
+    }
 
     /**
      * send to server paint update
@@ -48,6 +64,6 @@ public class CollabProtocol {
                 paintUpdate.getImageData()));
         // creating message
         Message message = new Message(COMMAND_PAINT, blocks);
-        //TODO: send to lower layer
+        networkProtocol.sendMessage(message);
     }
 }

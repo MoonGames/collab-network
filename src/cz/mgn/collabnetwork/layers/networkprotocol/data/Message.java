@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package cz.mgn.collabnetwork.layers.collabprotocol.data;
+package cz.mgn.collabnetwork.layers.networkprotocol.data;
 
 import java.util.ArrayList;
 
