@@ -28,28 +28,45 @@
 
 \begin{document}
 
+
 \tableofcontents
 \newpage
 
+\title{Collaborative raster painting protocol 1.0}
 
-\part{Úvod}
+CRPP 1.0
+
+
+\part{Introduction}
 
 \section{Licence}
 
-All text of this document is licenced by GNU FDL version 1.3 or greater. Current version text of licence you can find on web address http://www.gnu.org/copyleft/fdl.html.
+All text of this document is licenced by GNU FDL version 1.3 or greater. Current version of licence text you can find on web address http://www.gnu.org/copyleft/fdl.html.
 
 \section{Tento dokument}
 
-Tento dokument se nachází ve stavu přípravy. Může obsahovat chyby, rozpory nebo neúplné informace. Berte prosím v potaz jeho vývoj a na případné chyby upozorněte autory.
+This document in development. It can containts mistakes, antagonism or incomplete informations. Be take into account document development and call attention to authors for mistakes.
 
-Text of his parts is now in czech language. Please be patient and wait to translation. We are sorry. If you can help us with translation we will be pleasure with us cooperation.
+Text or his parts is now in czech language. Please be patient and wait to translation. We are sorry. If you can help us with translation we will be pleasure with us cooperation. Please call attention to language mistakes.
 
 \section{Úvod}
 
-Dokument popisuje síťový protokol ke kolaborativnímu (síťovému) kreslení. V první části popisujeme co za kolaborativní kreslení považujeme, co by mělo a co naopek němelo obsahovat (viz str. \ref{part.colaborative-painting}). Další část se stahuje k vlastnímu protokolu (viz str. \ref{part.protocol}).
+Dokument popisuje síťový protokol ke kolaborativnímu kreslení. V první části popisujeme co za kolaborativní kreslení považujeme, co by mělo a co naopek němelo obsahovat (viz str. \ref{part.colaborative-painting}). Další část se vstahuje k vlastnímu protokolu (viz str. \ref{part.protocol}).
 
 \part{Kolaborativní kreslení}
 \label{part.colaborative-painting}
+
+Kolaborativním kreslením míníme sdílené kreslení mezi mnoha uživately v reálném čase. Sdílení by mělo probíhat v počítačové síťi.
+
+\section{Stručný popis požadavků}
+
+\begin{itemize}
+	\item Je možné zakládat otevřené i zamčené místnosti.
+	\item V každé místnosti je možné dynamicky přidávat a/i odebírat plátna. Plátna mají své jméno.
+	\item U každého plátna lze dynamicky přidávat a/i odebírat vrstvy. Vrstvy lze pojmenovávat a měnit jejich pořadí.
+	\item Do vrstev lze zakreslovat libovolný bitmapový obsah.
+	\item Z vrstev je možné zcela, nebo částečně odmazávat (například pomocí gumy libovolného tvaru a krytí).
+\end{itemize}
 
 
 \part{Protokol}
@@ -58,40 +75,61 @@ Dokument popisuje síťový protokol ke kolaborativnímu (síťovému) kreslení
 
 \chapter{Obecný popis}
 
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.30\textwidth]{diagrams/protocol_layers.png}
+  \caption{Protocol layers diagram}
+  \label{picture.protocol_layers}
+\end{figure}
+
 Collab může komunikovat různými síťovými protokoly, důležite je, aby bylo možné skrze ně v reálném čase posílat tzv. collab message (viz strana \ref{text.collab_message}).
 
 \chapter{Collab message}
 \label{text.collab_message}
 
-Collab message je posloupnost bytů, která nese informaci o své délce, příkazu a přídavná data (bloky).
+CRPP message je posloupnost bytů, která nese informaci o své délce, příkazu a přídavná data (parametry).
 
-\section{Values}
+\section{Data types}
 
-Pokud není uvedeno jinak, všechny celočíselné hodnoty jsou bezeznaménkové a každý bit má hodnotu $2^{p}$. Kde $p$ je pozice bitu a poslední bit posloupnosti má pozici $0$. Například posloupnost $00001010$ má hodnotu $10$ ($2^1 + 2^3$).
+Pokud není uvedeno jinak, tak všechny celočíselné hodnoty jsou bezeznaménkové.
 
-Celočíselné znaménkové a reálné číselné hodnoty dodržují binární ukládání číselných hodnot v Javě (byte, short, int, long, float, double).
+\subsection{Unsigned integers}
+\label{subsection.unsigned-integers}
+
+Každý bit s hodnotou $1$ reprezentuje číslo $2^{p}$. Kde $p$ je pozice bitu (poslední bit -- v textu nejpravější -- posloupnosti má pozici $0$). Bity s hodnotou $0$ jsou rovny $0$.
+
+\begin{equation}
+\label{equation.unsigned-integers-sum}
+\sum_{p = 0}^{n - 1} b_p 2^p
+\end{equation}
+
+$p$ je pozice bitu (poslední ma hodnotu 0, pak roste směrem k předcházejícím), $n$ je celkový počet bitů reprezentujících číslo, $b$ je hodnota bitu ($0$ nebo $1$).
+
+Například posloupnost $00001010$ má hodnotu $10$ ($2^1 + 2^3$).
+
+\subsection{Signed integers}
+
+Hodnota znaménkového celého čísla je součet čísel $a$ a $b$ (tedy ${value} = a + b$). 
+
+Hodnotu proměnné $a$ uručje vzorec $a = -2^{n - 1}$, kde $n$ je počet bitů reprezentujících číslo.
+
+Hodnotu promměné $b$ určuje vzorec \ref{equation.unsigned-integers-sum} přičemž první bit není do vzorce vložen. Například posloupnost $10011$ by měla hodnotu $b = 2^0 + 2^1$ (není zahrnut první bit $1$). 
+
+\subsection{Reálná čísla}
+
+Reálná čísla jsou reprezentována podle standardu IEEE 754.
+
+\subsection{Logická hodnota} 
 
 Logické hodnoty (boolean) jsou reprezentovány jedním bytem, kde samé nuly ($00000000$) reprezentují hodnotu \emph{false} a hodnota jedna ($00000001$) reprezentuje hodnotu \emph{true}. Ostatní hodnoty jsou považovány za nevalidní.
 
-Veškerý text je kódován jako UTF-8.
+\subsection{Řetězce}
+
+Veškerý text (řetězce zanků) je kódován jako UTF-8. V některých případech jako posloupnost ASCII znaků, to je ovšem vždy uvedeno.
 
 \section{Message}
 
-Zpráva začíná čtyřmi byty udávající délku celé zprávy (neznaménkové číslo) bez těchto prních čtyř.
-
-Po načtení délky zprávy se načté právě tolik dalších bytů, které se následně zpracovávají.
-
-Další dva byty (pátý a šestý) jako neznaménkové číslo udávají příkaz (typ) zprávy.
-
-Po typu příkazu následuje seznam bloků (viz strana \ref{text.collab_message.block}), které mohou být v posloupnosti bytů zprávy umístné v libovolném pořadí. Není možné bloky dělit na jednotlivé části (podposloupnosti) a ty jakýmkoli způsobem ve zprávě permutovat!
-
-Obsah message je tedy následující:
-
-\begin{enumerate}
-	\item message length (4\,{}B)
-	\item command (2\,{}B)
-	\item blocks (message length - 2 B)
-\end{enumerate}
+%TODO:
 
 Obsah zprávy je také ilustrován diagramem \ref{picture.message_structure}.
 
