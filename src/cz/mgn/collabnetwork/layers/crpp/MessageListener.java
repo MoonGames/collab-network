@@ -14,5 +14,5 @@ import cz.mgn.collabnetwork.layers.crpp.data.Message;
  */
 public interface MessageListener {
     
-    public void messageReceived(Message messate);
+    public void messageReceived(Message message);
 }

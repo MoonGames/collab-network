@@ -25,4 +25,8 @@ public class MessageUitls {
     public static Message.Block createBlock(String name, String value) {
         return new Message.Block(name, BinaryUtil.utf8StringToByteArray(value));
     }
+    
+    public static int getBlockValue(Message.Block block) {
+        return BinaryUtil.byteArrayToInt(block.getBlockData());
+    }
 }

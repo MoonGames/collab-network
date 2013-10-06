@@ -19,13 +19,13 @@
  */
 package cz.mgn.collabnetwork.layers.collabprotocol;
 
+import cz.mgn.collabnetwork.layers.collabprotocol.data.ChatMessage;
 import cz.mgn.collabnetwork.layers.collabprotocol.data.PaintUpdate;
 import cz.mgn.collabnetwork.layers.collabprotocol.data.RoomData;
 import cz.mgn.collabnetwork.layers.crpp.MessageListener;
 import cz.mgn.collabnetwork.layers.crpp.CRPP;
 import cz.mgn.collabnetwork.layers.crpp.data.Message;
 import cz.mgn.collabnetwork.layers.crpp.data.MessageUitls;
-import cz.mgn.collabnetwork.utils.BinaryUtil;
 import cz.mgn.collabnetwork.utils.Utils;
 import java.util.ArrayList;
 
@@ -59,7 +59,7 @@ public class CollabProtocol implements MessageListener {
     public static final String COMMAND_CREATE_ROOM_BLOCK_NAME = "NAME";
     public static final String COMMAND_CREATE_ROOM_BLOCK_PASSWORD = "PSWD";
     //
-    // TODO: all what is below
+    //
     public static final String COMMAND_O_JOIN_TO_ROOM = "OJRO";
     public static final String COMMAND_O_JOIN_TO_ROOM_BLOCK_PASSWORD = "PSWD";
     public static final String COMMAND_O_JOIN_TO_ROOM_BLOCK_ROOM_ID = "ROID";
@@ -67,18 +67,24 @@ public class CollabProtocol implements MessageListener {
     public static final String COMMAND_DISCONNECT_FROM_ROOM = "ODRO";
     //
     public static final String COMMAND_ADD_LAYER = "ALAY";
+    public static final String COMMAND_ADD_LAYER_BLOCK_NAME = "NAME";
+    public static final String COMMAND_ADD_LAYER_BLOCK_LOCATION = "LOCA";
     //
     public static final String COMMAND_REMOVE_LAYER = "RLAY";
+    public static final String COMMAND_REMOVE_LAYER_BLOCK_ID = "LAID";
     //
     public static final String COMMAND_SET_LAYER_LOCATION = "SLAL";
-    //
+    public static final String COMMAND_SET_LAYER_LOCATION_BLOCK_LAYER_ID = "LAID";
+    public static final String COMMAND_SET_LAYER_LOCATION_BLOCK_NEW_LOCATION = "NLOC";
+    // TODO
     public static final String COMMAND_ADD_CANVAS = "ACAN";
-    //
+    // TODO
     public static final String COMMAND_REMOVE_CANVAS = "RCAN";
     //
     public static final String COMMAND_MAKE_HTTP_IMAGE = "HTIM";
     //
     public static final String COMMAND_O_CHAT_MESSAGE = "OCHA";
+    public static final String COMMAND_O_CHAT_MESSAGE_BLOCK_TEXT = "TEXT";
 
     /**
      * lower layer
@@ -133,11 +139,11 @@ public class CollabProtocol implements MessageListener {
     public void sendGetConnectionInfo() {
         send(COMMAND_GET_CONNECTION_INFO);
     }
-    
+
     public void sendGetRoomsList() {
         send(COMMAND_GET_ROOMS_LIST);
     }
-    
+
     public void sendCreateRoom(RoomData room) {
         ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
         // creating blocks
@@ -147,15 +153,15 @@ public class CollabProtocol implements MessageListener {
                 room.getHeight()));
         blocks.add(MessageUitls.createBlock(COMMAND_CREATE_ROOM_BLOCK_NAME,
                 room.getName()));
-        
+
         if (room.getPassword() != null) {
             blocks.add(MessageUitls.createBlock(COMMAND_CREATE_ROOM_BLOCK_PASSWORD,
-                Utils.makeSHA256Hash(room.getPassword())));
+                    Utils.makeSHA256Hash(room.getPassword())));
         }
-        
+
         send(COMMAND_CREATE_ROOM, blocks);
     }
-    
+
     public void sendOutgoingJoinToRoom(int roomID, String password) {
         ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
 
@@ -163,15 +169,79 @@ public class CollabProtocol implements MessageListener {
                 roomID));
         if (password != null) {
             blocks.add(MessageUitls.createBlock(COMMAND_O_JOIN_TO_ROOM_BLOCK_PASSWORD,
-                Utils.makeSHA256Hash(password)));
+                    Utils.makeSHA256Hash(password)));
         }
-        
+
         send(COMMAND_O_JOIN_TO_ROOM, blocks);
     }
 
+    public void sendDisconnectFromRoom() {
+        send(COMMAND_DISCONNECT_FROM_ROOM);
+    }
+
+    public void sendAddLayer(String name, int location) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+
+        blocks.add(MessageUitls.createBlock(COMMAND_ADD_LAYER_BLOCK_NAME, name));
+        blocks.add(MessageUitls.createBlock(COMMAND_ADD_LAYER_BLOCK_LOCATION, location));
+
+        send(COMMAND_ADD_LAYER, blocks);
+    }
+
+    public void sendRemoveLayer(int id) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+
+        blocks.add(MessageUitls.createBlock(COMMAND_REMOVE_LAYER_BLOCK_ID, id));
+
+        send(COMMAND_REMOVE_LAYER, blocks);
+    }
+
+    public void sendSetLayerLocation(int id, int newLocation) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+
+        blocks.add(MessageUitls.createBlock(COMMAND_SET_LAYER_LOCATION_BLOCK_LAYER_ID, id));
+        blocks.add(MessageUitls.createBlock(COMMAND_SET_LAYER_LOCATION_BLOCK_NEW_LOCATION, newLocation));
+
+        send(COMMAND_SET_LAYER_LOCATION, blocks);
+    }
+
+    public void sendMakeHTTPImage() {
+        send(COMMAND_MAKE_HTTP_IMAGE);
+    }
+
+    public void sendChatMessage(ChatMessage message) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+
+        blocks.add(MessageUitls.createBlock(COMMAND_O_CHAT_MESSAGE_BLOCK_TEXT,
+                message.getMessage()));
+
+        send(COMMAND_O_CHAT_MESSAGE, blocks);
+    }
+
     @Override
-    public void messageReceived(Message messate) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void messageReceived(Message message) {
+        switch (message.getMessageCommand()) {
+            case COMMAND_PAINT:
+                processPaint(message);
+                break;
+        }
+    }
+
+    protected void processPaint(Message message) {
+        if (commandsListener != null) {
+            int updateType = MessageUitls.getBlockValue(message.getBlock(COMMAND_PAINT_BLOCK_UPDATE_TYPE));
+            int updateID = MessageUitls.getBlockValue(message.getBlock(COMMAND_PAINT_BLOCK_UPDATE_ID));
+            int layerID = MessageUitls.getBlockValue(message.getBlock(COMMAND_PAINT_BLOCK_LAYER_ID));
+            int canvasID = MessageUitls.getBlockValue(message.getBlock(COMMAND_PAINT_BLOCK_CANVAS_ID));
+            int xCoordinate = MessageUitls.getBlockValue(message.getBlock(COMMAND_PAINT_BLOCK_X_COORDINATE));
+            int yCoordinate = MessageUitls.getBlockValue(message.getBlock(COMMAND_PAINT_BLOCK_Y_COORDINATE));
+            byte[] imageData = message.getBlock(COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA).getBlockData();
+
+            PaintUpdate paintUpdate = new PaintUpdate(updateType, updateID, layerID,
+                    canvasID, xCoordinate, yCoordinate, imageData);
+
+            commandsListener.paint(paintUpdate);
+        }
     }
 
     protected void send(String command) {

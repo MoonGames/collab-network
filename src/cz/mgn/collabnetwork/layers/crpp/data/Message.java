@@ -74,6 +74,19 @@ public class Message {
         return blocks;
     }
 
+    public Block getBlock(String name) {
+        Block result = null;
+
+        //TODO: faster algorythm (based on better data structure)
+        for (int i = 0; i < blocks.size() && result == null; i++) {
+            if (name.equals(blocks.get(i).getBlockName())) {
+                result = blocks.get(i);
+            }
+        }
+
+        return result;
+    }
+
     /**
      * block of collab message
      */
