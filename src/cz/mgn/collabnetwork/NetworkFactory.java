@@ -12,7 +12,7 @@ import java.io.OutputStream;
  */
 public class NetworkFactory {
     
-    public CollabProtocol createCRPPBinaryConnection(InputStream inputStream, OutputStream outputStream) {
+    public static CollabProtocol createCRPPBinaryConnection(InputStream inputStream, OutputStream outputStream) {
         CRPPBinary connection = new CRPPBinary(inputStream, outputStream);
         CRPP crpp = new CRPP(connection);
         

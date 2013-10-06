@@ -38,12 +38,22 @@ public class Message {
      */
     protected ArrayList<Block> blocks;
 
+    public Message(String messageCommand) {
+        testNameAndThrow(messageCommand);
+        this.messageCommand = messageCommand;
+        this.blocks = new ArrayList<Block>();
+    }
+
     public Message(String messageCommand, ArrayList<Block> blocks) {
-        if (messageCommand.length() != 4) {
-            throw new IllegalArgumentException("Message commant has to have exactly four characters.");
-        }
+        testNameAndThrow(messageCommand);
         this.messageCommand = messageCommand;
         this.blocks = blocks;
+    }
+
+    protected void testNameAndThrow(String name) {
+        if (name.length() != 4) {
+            throw new IllegalArgumentException("Message commant has to have exactly four characters.");
+        }
     }
 
     /**

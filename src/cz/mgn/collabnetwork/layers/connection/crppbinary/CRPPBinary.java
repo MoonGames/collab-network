@@ -89,7 +89,7 @@ public class CRPPBinary implements Connection {
     protected void readNext() throws IOException {
         byte[] idBytes = new byte[4];
         inputStream.read(idBytes);
-        int id = BinaryUtil.byteArrayToInt(idBytes);
+        //int id = BinaryUtil.byteArrayToInt(idBytes);
 
         byte[] lengthBytes = new byte[4];
         inputStream.read(lengthBytes);
@@ -98,6 +98,8 @@ public class CRPPBinary implements Connection {
         byte[] data = new byte[length];
         inputStream.read(data);
 
-        dataListener.dataReceived(data);
+        if (dataListener != null) {
+            dataListener.dataReceived(data);
+        }
     }
 }

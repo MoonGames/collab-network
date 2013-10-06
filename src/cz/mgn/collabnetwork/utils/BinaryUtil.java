@@ -47,9 +47,9 @@ public class BinaryUtil {
             throw new IllegalArgumentException("Integer must be positive or zero!");
         }
         return new byte[]{(byte) ((0xff000000 & integer) >>> 24),
-                    (byte) ((0x00ff0000 & integer) >>> 16),
-                    (byte) ((0x0000ff00 & integer) >> 8),
-                    (byte) (0x000000ff & integer)};
+            (byte) ((0x00ff0000 & integer) >>> 16),
+            (byte) ((0x0000ff00 & integer) >> 8),
+            (byte) (0x000000ff & integer)};
     }
 
     /**
@@ -60,10 +60,10 @@ public class BinaryUtil {
      */
     public static final byte[] intToByteArray(int value) {
         return new byte[]{
-                    (byte) (value >>> 24),
-                    (byte) (value >>> 16),
-                    (byte) (value >>> 8),
-                    (byte) value};
+            (byte) (value >>> 24),
+            (byte) (value >>> 16),
+            (byte) (value >>> 8),
+            (byte) value};
     }
 
     /**
@@ -95,7 +95,7 @@ public class BinaryUtil {
     public static final byte[] booleanToByteArray(boolean value) {
         return new byte[]{(byte) (value ? 0x01 : 0x00)};
     }
-    
+
     public static final byte[] asciiStringToByteArray(String string) {
         byte[] bytes = null;
         try {
@@ -105,11 +105,31 @@ public class BinaryUtil {
         }
         return bytes;
     }
-    
+
     public static final String byteArrayToAsciiString(byte[] b) {
         String string = null;
         try {
             string = new String(b, "US-ASCII");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(BinaryUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return string;
+    }
+
+    public static final byte[] utf8StringToByteArray(String string) {
+        byte[] bytes = null;
+        try {
+            bytes = string.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(BinaryUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return bytes;
+    }
+
+    public static final String byteArrayToUtf8String(byte[] b) {
+        String string = null;
+        try {
+            string = new String(b, "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(BinaryUtil.class.getName()).log(Level.SEVERE, null, ex);
         }

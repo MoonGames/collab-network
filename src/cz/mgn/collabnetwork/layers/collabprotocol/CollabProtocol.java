@@ -20,10 +20,13 @@
 package cz.mgn.collabnetwork.layers.collabprotocol;
 
 import cz.mgn.collabnetwork.layers.collabprotocol.data.PaintUpdate;
+import cz.mgn.collabnetwork.layers.collabprotocol.data.RoomData;
 import cz.mgn.collabnetwork.layers.crpp.MessageListener;
 import cz.mgn.collabnetwork.layers.crpp.CRPP;
 import cz.mgn.collabnetwork.layers.crpp.data.Message;
+import cz.mgn.collabnetwork.layers.crpp.data.MessageUitls;
 import cz.mgn.collabnetwork.utils.BinaryUtil;
+import cz.mgn.collabnetwork.utils.Utils;
 import java.util.ArrayList;
 
 /**
@@ -34,6 +37,7 @@ import java.util.ArrayList;
  */
 public class CollabProtocol implements MessageListener {
 
+    // paint
     public static final String COMMAND_PAINT = "PANT";
     public static final String COMMAND_PAINT_BLOCK_UPDATE_TYPE = "UDTY";
     public static final String COMMAND_PAINT_BLOCK_UPDATE_ID = "UDID";
@@ -42,6 +46,40 @@ public class CollabProtocol implements MessageListener {
     public static final String COMMAND_PAINT_BLOCK_X_COORDINATE = "XCOR";
     public static final String COMMAND_PAINT_BLOCK_Y_COORDINATE = "YCOR";
     public static final String COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA = "UIMG";
+    // get connection info
+    public static final String COMMAND_GET_CONNECTION_INFO = "GCIN";
+    // autenticate client TODO
+    public static final String COMMAND_AUTENTICATE_CLIENT = "AUTN";
+    //
+    public static final String COMMAND_GET_ROOMS_LIST = "GRLI";
+    //
+    public static final String COMMAND_CREATE_ROOM = "CROM";
+    public static final String COMMAND_CREATE_ROOM_BLOCK_WIDTH = "WIDT";
+    public static final String COMMAND_CREATE_ROOM_BLOCK_HEIGHT = "HEIG";
+    public static final String COMMAND_CREATE_ROOM_BLOCK_NAME = "NAME";
+    public static final String COMMAND_CREATE_ROOM_BLOCK_PASSWORD = "PSWD";
+    //
+    // TODO: all what is below
+    public static final String COMMAND_O_JOIN_TO_ROOM = "OJRO";
+    public static final String COMMAND_O_JOIN_TO_ROOM_BLOCK_PASSWORD = "PSWD";
+    public static final String COMMAND_O_JOIN_TO_ROOM_BLOCK_ROOM_ID = "ROID";
+    //
+    public static final String COMMAND_DISCONNECT_FROM_ROOM = "ODRO";
+    //
+    public static final String COMMAND_ADD_LAYER = "ALAY";
+    //
+    public static final String COMMAND_REMOVE_LAYER = "RLAY";
+    //
+    public static final String COMMAND_SET_LAYER_LOCATION = "SLAL";
+    //
+    public static final String COMMAND_ADD_CANVAS = "ACAN";
+    //
+    public static final String COMMAND_REMOVE_CANVAS = "RCAN";
+    //
+    public static final String COMMAND_MAKE_HTTP_IMAGE = "HTIM";
+    //
+    public static final String COMMAND_O_CHAT_MESSAGE = "OCHA";
+
     /**
      * lower layer
      */
@@ -71,30 +109,77 @@ public class CollabProtocol implements MessageListener {
      *
      * @param paintUpdate data of this update
      */
-    public void paint(PaintUpdate paintUpdate) {
+    public void sendPaint(PaintUpdate paintUpdate) {
         ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
         // creating blocks
-        blocks.add(new Message.Block(COMMAND_PAINT_BLOCK_UPDATE_TYPE,
-                BinaryUtil.convertIntToUsignedBytes(paintUpdate.getUpdateType())));
-        blocks.add(new Message.Block(COMMAND_PAINT_BLOCK_UPDATE_ID,
-                BinaryUtil.convertIntToUsignedBytes(paintUpdate.getUpdateID())));
-        blocks.add(new Message.Block(COMMAND_PAINT_BLOCK_LAYER_ID,
-                BinaryUtil.convertIntToUsignedBytes(paintUpdate.getLayerID())));
-        blocks.add(new Message.Block(COMMAND_PAINT_BLOCK_CANVAS_ID,
-                BinaryUtil.convertIntToUsignedBytes(paintUpdate.getCanvasID())));
-        blocks.add(new Message.Block(COMMAND_PAINT_BLOCK_X_COORDINATE,
-                BinaryUtil.convertIntToUsignedBytes(paintUpdate.getXCoordinate())));
-        blocks.add(new Message.Block(COMMAND_PAINT_BLOCK_Y_COORDINATE,
-                BinaryUtil.convertIntToUsignedBytes(paintUpdate.getYCoordinate())));
-        blocks.add(new Message.Block(COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA,
+        blocks.add(MessageUitls.createBlock(COMMAND_PAINT_BLOCK_UPDATE_TYPE,
+                paintUpdate.getUpdateType()));
+        blocks.add(MessageUitls.createBlock(COMMAND_PAINT_BLOCK_UPDATE_ID,
+                paintUpdate.getUpdateID()));
+        blocks.add(MessageUitls.createBlock(COMMAND_PAINT_BLOCK_LAYER_ID,
+                paintUpdate.getLayerID()));
+        blocks.add(MessageUitls.createBlock(COMMAND_PAINT_BLOCK_CANVAS_ID,
+                paintUpdate.getCanvasID()));
+        blocks.add(MessageUitls.createBlock(COMMAND_PAINT_BLOCK_X_COORDINATE,
+                paintUpdate.getXCoordinate()));
+        blocks.add(MessageUitls.createBlock(COMMAND_PAINT_BLOCK_Y_COORDINATE,
+                paintUpdate.getYCoordinate()));
+        blocks.add(MessageUitls.createBlock(COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA,
                 paintUpdate.getImageData()));
-        // creating message
-        Message message = new Message(COMMAND_PAINT, blocks);
-        networkProtocol.sendMessage(message);
+
+        send(COMMAND_PAINT, blocks);
+    }
+
+    public void sendGetConnectionInfo() {
+        send(COMMAND_GET_CONNECTION_INFO);
+    }
+    
+    public void sendGetRoomsList() {
+        send(COMMAND_GET_ROOMS_LIST);
+    }
+    
+    public void sendCreateRoom(RoomData room) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+        // creating blocks
+        blocks.add(MessageUitls.createBlock(COMMAND_CREATE_ROOM_BLOCK_WIDTH,
+                room.getWidth()));
+        blocks.add(MessageUitls.createBlock(COMMAND_CREATE_ROOM_BLOCK_HEIGHT,
+                room.getHeight()));
+        blocks.add(MessageUitls.createBlock(COMMAND_CREATE_ROOM_BLOCK_NAME,
+                room.getName()));
+        
+        if (room.getPassword() != null) {
+            blocks.add(MessageUitls.createBlock(COMMAND_CREATE_ROOM_BLOCK_PASSWORD,
+                Utils.makeSHA256Hash(room.getPassword())));
+        }
+        
+        send(COMMAND_CREATE_ROOM, blocks);
+    }
+    
+    public void sendOutgoingJoinToRoom(int roomID, String password) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+
+        blocks.add(MessageUitls.createBlock(COMMAND_O_JOIN_TO_ROOM_BLOCK_ROOM_ID,
+                roomID));
+        if (password != null) {
+            blocks.add(MessageUitls.createBlock(COMMAND_O_JOIN_TO_ROOM_BLOCK_PASSWORD,
+                Utils.makeSHA256Hash(password)));
+        }
+        
+        send(COMMAND_O_JOIN_TO_ROOM, blocks);
     }
 
     @Override
     public void messageReceived(Message messate) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    protected void send(String command) {
+        networkProtocol.sendMessage(new Message(command));
+    }
+
+    protected void send(String command, ArrayList<Message.Block> blocks) {
+        networkProtocol.sendMessage(new Message(command, blocks));
+    }
+
 }
