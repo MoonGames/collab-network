@@ -17,47 +17,53 @@
  * You should have received a copy of the GNU General Public License
  * along with Collab desktop.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.mgn.collabnetwork.layers.collabprotocol;
 
 import cz.mgn.collabnetwork.layers.collabprotocol.data.PaintUpdate;
-import cz.mgn.collabnetwork.layers.networkprotocol.NetworkProtocol;
-import cz.mgn.collabnetwork.layers.networkprotocol.data.Message;
+import cz.mgn.collabnetwork.layers.crpp.MessageListener;
+import cz.mgn.collabnetwork.layers.crpp.CRPP;
+import cz.mgn.collabnetwork.layers.crpp.data.Message;
 import cz.mgn.collabnetwork.utils.BinaryUtil;
 import java.util.ArrayList;
 
 /**
  *
- * @author indy
+ * @author Martin Indra <aktive at seznam.cz>
  *
  * collab protocol layer
  */
-public class CollabProtocol {
+public class CollabProtocol implements MessageListener {
 
-    public static final int COMMAND_PAINT = 1;
-    public static final int COMMAND_PAINT_BLOCK_UPDATE_TYPE = 1;
-    public static final int COMMAND_PAINT_BLOCK_UPDATE_ID = 2;
-    public static final int COMMAND_PAINT_BLOCK_LAYER_ID = 3;
-    public static final int COMMAND_PAINT_BLOCK_CANVAS_ID = 4;
-    public static final int COMMAND_PAINT_BLOCK_X_COORDINATE = 5;
-    public static final int COMMAND_PAINT_BLOCK_Y_COORDINATE = 6;
-    public static final int COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA = 7;
+    public static final String COMMAND_PAINT = "PANT";
+    public static final String COMMAND_PAINT_BLOCK_UPDATE_TYPE = "UDTY";
+    public static final String COMMAND_PAINT_BLOCK_UPDATE_ID = "UDID";
+    public static final String COMMAND_PAINT_BLOCK_LAYER_ID = "LYID";
+    public static final String COMMAND_PAINT_BLOCK_CANVAS_ID = "CNID";
+    public static final String COMMAND_PAINT_BLOCK_X_COORDINATE = "XCOR";
+    public static final String COMMAND_PAINT_BLOCK_Y_COORDINATE = "YCOR";
+    public static final String COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA = "UIMG";
     /**
      * lower layer
      */
-    protected NetworkProtocol networkProtocol;
+    protected CRPP networkProtocol;
+    protected CommandsListener commandsListener;
 
     /**
      * initize collab protocol layer
      *
      * @param networkProtocol network protocol layer
      */
-    public CollabProtocol(NetworkProtocol networkProtocol) {
+    public CollabProtocol(CRPP networkProtocol) {
         this.networkProtocol = networkProtocol;
+        init();
+    }
+
+    private void init() {
+        this.networkProtocol.setMessageListener(this);
+    }
+
+    public void setCommandsListener(CommandsListener commandsListener) {
+        this.commandsListener = commandsListener;
     }
 
     /**
@@ -85,5 +91,10 @@ public class CollabProtocol {
         // creating message
         Message message = new Message(COMMAND_PAINT, blocks);
         networkProtocol.sendMessage(message);
+    }
+
+    @Override
+    public void messageReceived(Message messate) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

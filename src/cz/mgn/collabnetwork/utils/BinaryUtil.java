@@ -24,6 +24,10 @@
  */
 package cz.mgn.collabnetwork.utils;
 
+import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author indy
@@ -90,5 +94,25 @@ public class BinaryUtil {
      */
     public static final byte[] booleanToByteArray(boolean value) {
         return new byte[]{(byte) (value ? 0x01 : 0x00)};
+    }
+    
+    public static final byte[] asciiStringToByteArray(String string) {
+        byte[] bytes = null;
+        try {
+            bytes = string.getBytes("US-ASCII");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(BinaryUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return bytes;
+    }
+    
+    public static final String byteArrayToAsciiString(byte[] b) {
+        String string = null;
+        try {
+            string = new String(b, "US-ASCII");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(BinaryUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return string;
     }
 }
