@@ -33,7 +33,7 @@ import java.util.ArrayList;
  *
  * @author Martin Indra <aktive at seznam.cz>
  *
- * collab protocol layer
+ * Collab protocol layer
  */
 public class CollabProtocol implements MessageListener {
 
@@ -48,8 +48,9 @@ public class CollabProtocol implements MessageListener {
     public static final String COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA = "UIMG";
     // get connection info
     public static final String COMMAND_GET_CONNECTION_INFO = "GCIN";
-    // autenticate client TODO
+    // autenticate client
     public static final String COMMAND_AUTENTICATE_CLIENT = "AUTN";
+    public static final String COMMAND_AUTENTICATE_CLIENT_BLOCK_PASSWORD = "PSWD";
     //
     public static final String COMMAND_GET_ROOMS_LIST = "GRLI";
     //
@@ -85,6 +86,13 @@ public class CollabProtocol implements MessageListener {
     //
     public static final String COMMAND_O_CHAT_MESSAGE = "OCHA";
     public static final String COMMAND_O_CHAT_MESSAGE_BLOCK_TEXT = "TEXT";
+    //
+    public static final String COMMAND_SET_NICK = "SNIC";
+    public static final String COMMAND_SET_NICK_BLOCK_NICK = "NICK";
+    //
+    public static final String COMMAND_SET_LAYER_NAME = "SLAN";
+    public static final String COMMAND_SET_LAYER_NAME_BLOCK_LAYER_ID = "LAID";
+    public static final String COMMAND_SET_LAYER_NAME_BLOCK_LAYER_NAME = "LANA";
 
     /**
      * lower layer
@@ -156,7 +164,7 @@ public class CollabProtocol implements MessageListener {
 
         if (room.getPassword() != null) {
             blocks.add(MessageUitls.createBlock(COMMAND_CREATE_ROOM_BLOCK_PASSWORD,
-                    Utils.makeSHA256Hash(room.getPassword())));
+                    Utils.makeSHA256HashString(room.getPassword())));
         }
 
         send(COMMAND_CREATE_ROOM, blocks);
@@ -169,7 +177,7 @@ public class CollabProtocol implements MessageListener {
                 roomID));
         if (password != null) {
             blocks.add(MessageUitls.createBlock(COMMAND_O_JOIN_TO_ROOM_BLOCK_PASSWORD,
-                    Utils.makeSHA256Hash(password)));
+                    Utils.makeSHA256HashString(password)));
         }
 
         send(COMMAND_O_JOIN_TO_ROOM, blocks);
@@ -177,6 +185,14 @@ public class CollabProtocol implements MessageListener {
 
     public void sendDisconnectFromRoom() {
         send(COMMAND_DISCONNECT_FROM_ROOM);
+    }
+
+    public void sendAuthenticateClient(String password) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+
+        blocks.add(MessageUitls.createBlock(COMMAND_AUTENTICATE_CLIENT_BLOCK_PASSWORD, password, true));
+
+        send(COMMAND_AUTENTICATE_CLIENT, blocks);
     }
 
     public void sendAddLayer(String name, int location) {
@@ -216,6 +232,23 @@ public class CollabProtocol implements MessageListener {
                 message.getMessage()));
 
         send(COMMAND_O_CHAT_MESSAGE, blocks);
+    }
+
+    public void sendSetNick(String nick) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+
+        blocks.add(MessageUitls.createBlock(COMMAND_SET_NICK_BLOCK_NICK, nick));
+
+        send(COMMAND_SET_NICK, blocks);
+    }
+
+    public void sendSetLayerName(int layerID, String name) {
+        ArrayList<Message.Block> blocks = new ArrayList<Message.Block>();
+
+        blocks.add(MessageUitls.createBlock(COMMAND_SET_LAYER_NAME_BLOCK_LAYER_ID, layerID));
+        blocks.add(MessageUitls.createBlock(COMMAND_SET_LAYER_NAME_BLOCK_LAYER_NAME, name));
+
+        send(COMMAND_SET_LAYER_NAME, blocks);
     }
 
     @Override
