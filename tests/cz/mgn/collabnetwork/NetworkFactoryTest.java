@@ -17,6 +17,8 @@
 package cz.mgn.collabnetwork;
 
 import cz.mgn.collabnetwork.layers.collabprotocol.CollabProtocol;
+import cz.mgn.collabnetwork.layers.collabprotocol.CommandsSender;
+import cz.mgn.collabnetwork.layers.collabprotocol.ProtocolConstants;
 import cz.mgn.collabnetwork.layers.collabprotocol.data.PaintUpdate;
 import cz.mgn.collabnetwork.utils.BinaryUtil;
 import java.io.ByteArrayInputStream;
@@ -65,24 +67,25 @@ public class NetworkFactoryTest {
 
         CollabProtocol collabProtocol = NetworkFactory.createCRPPBinaryConnection(inputStream, outputStream);
 
-        testOutgoingCommands(outputStream, collabProtocol);
+        testOutgoingCommands(outputStream, collabProtocol.getCommandsSender());
 
         //TODO: set of input commands
+
     }
 
     /**
      * Processes test for out commands.
      *
      * @param outputStream the output stream of CollabProtocol instance.
-     * @param collabProtocol CollabProtocol instance.
+     * @param sender CollabProtocol commands sender
      */
-    protected void testOutgoingCommands(ByteArrayOutputStream outputStream, CollabProtocol collabProtocol) {
-        testPaintOut(outputStream, collabProtocol);
+    protected void testOutgoingCommands(ByteArrayOutputStream outputStream, CommandsSender sender) {
+        testPaintOut(outputStream, sender);
         outputStream.reset();
         //TODO: all other commands
     }
 
-    protected void testPaintOut(ByteArrayOutputStream outputStream, CollabProtocol collabProtocol) {
+    protected void testPaintOut(ByteArrayOutputStream outputStream, CommandsSender sender) {
         System.out.println("testing paint command");
 
         byte[] fakeImageData = new byte[]{0, 1, 2, 3, 5};
@@ -94,25 +97,25 @@ public class NetworkFactoryTest {
         int yCoordinate = 480;
 
         PaintUpdate update = new PaintUpdate(PaintUpdate.UPDATE_TYPE_ADD, updateID, layerID, canvasID, xCoordinate, yCoordinate, fakeImageData);
-        collabProtocol.sendPaint(update);
+        sender.sendPaint(update);
 
         byte[] receivedData = outputStream.toByteArray();
         /*
          Expected result structure (parameters can be received in diffrend order):
          {4 ID} {4 data length} {4 PANT} {12 UDTY} {12 UDID} {12 LYID} {12 CNID} {12 XCOR} {12 YCOR} {x UIMG}
          */
-        
-        // test for command 
+
+        // test for command
         findAndTestBlock("paint command", receivedData, new byte[]{80, 65, 78, 84}, new byte[0]);
-        
+
         // tests for blocks
-        findAndTestBlock("image data", CollabProtocol.COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA, receivedData, fakeImageData);
-        findAndTestBlock("X coordinate", CollabProtocol.COMMAND_PAINT_BLOCK_X_COORDINATE, receivedData, BinaryUtil.intToByteArray(xCoordinate));
-        findAndTestBlock("Y coordinate", CollabProtocol.COMMAND_PAINT_BLOCK_Y_COORDINATE, receivedData, BinaryUtil.intToByteArray(yCoordinate));
-        findAndTestBlock("update type", CollabProtocol.COMMAND_PAINT_BLOCK_UPDATE_TYPE, receivedData, BinaryUtil.intToByteArray(updateType));
-        findAndTestBlock("update ID", CollabProtocol.COMMAND_PAINT_BLOCK_UPDATE_ID, receivedData, BinaryUtil.intToByteArray(updateID));
-        findAndTestBlock("layer ID", CollabProtocol.COMMAND_PAINT_BLOCK_LAYER_ID, receivedData, BinaryUtil.intToByteArray(layerID));
-        findAndTestBlock("canvas ID", CollabProtocol.COMMAND_PAINT_BLOCK_CANVAS_ID, receivedData, BinaryUtil.intToByteArray(canvasID));
+        findAndTestBlock("image data", ProtocolConstants.COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA, receivedData, fakeImageData);
+        findAndTestBlock("X coordinate", ProtocolConstants.COMMAND_PAINT_BLOCK_X_COORDINATE, receivedData, BinaryUtil.intToByteArray(xCoordinate));
+        findAndTestBlock("Y coordinate", ProtocolConstants.COMMAND_PAINT_BLOCK_Y_COORDINATE, receivedData, BinaryUtil.intToByteArray(yCoordinate));
+        findAndTestBlock("update type", ProtocolConstants.COMMAND_PAINT_BLOCK_UPDATE_TYPE, receivedData, BinaryUtil.intToByteArray(updateType));
+        findAndTestBlock("update ID", ProtocolConstants.COMMAND_PAINT_BLOCK_UPDATE_ID, receivedData, BinaryUtil.intToByteArray(updateID));
+        findAndTestBlock("layer ID", ProtocolConstants.COMMAND_PAINT_BLOCK_LAYER_ID, receivedData, BinaryUtil.intToByteArray(layerID));
+        findAndTestBlock("canvas ID", ProtocolConstants.COMMAND_PAINT_BLOCK_CANVAS_ID, receivedData, BinaryUtil.intToByteArray(canvasID));
     }
 
     /**
