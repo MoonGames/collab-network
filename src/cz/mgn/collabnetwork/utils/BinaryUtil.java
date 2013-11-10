@@ -18,10 +18,6 @@
  * along with Collab desktop.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package cz.mgn.collabnetwork.utils;
 
 import java.io.UnsupportedEncodingException;
@@ -30,8 +26,9 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author indy
+ * @author Martin Indra <aktive at seznam.cz>
  */
+//TODO: tests
 public class BinaryUtil {
 
     /**

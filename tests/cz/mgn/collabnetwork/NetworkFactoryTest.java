@@ -1,24 +1,31 @@
+/*
+ * Copyright (C) 2013 Martin Indra <aktive at seznam.cz>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package cz.mgn.collabnetwork;
 
 import cz.mgn.collabnetwork.layers.collabprotocol.CollabProtocol;
 import cz.mgn.collabnetwork.layers.collabprotocol.data.PaintUpdate;
+import cz.mgn.collabnetwork.utils.BinaryUtil;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -39,6 +46,7 @@ public class NetworkFactoryTest {
 
     @Before
     public void setUp() {
+        System.out.println("NetworkFactory:");
     }
 
     @After
@@ -57,102 +65,120 @@ public class NetworkFactoryTest {
 
         CollabProtocol collabProtocol = NetworkFactory.createCRPPBinaryConnection(inputStream, outputStream);
 
-        // set of ouput commands
-        testPaintOut(outputStream, collabProtocol);
+        testOutgoingCommands(outputStream, collabProtocol);
 
         //TODO: set of input commands
+    }
+
+    /**
+     * Processes test for out commands.
+     *
+     * @param outputStream the output stream of CollabProtocol instance.
+     * @param collabProtocol CollabProtocol instance.
+     */
+    protected void testOutgoingCommands(ByteArrayOutputStream outputStream, CollabProtocol collabProtocol) {
+        testPaintOut(outputStream, collabProtocol);
+        outputStream.reset();
+        //TODO: all other commands
     }
 
     protected void testPaintOut(ByteArrayOutputStream outputStream, CollabProtocol collabProtocol) {
         System.out.println("testing paint command");
 
         byte[] fakeImageData = new byte[]{0, 1, 2, 3, 5};
+        int updateType = 0;
+        int updateID = 5;
+        int layerID = 6;
+        int canvasID = 7;
+        int xCoordinate = 320;
+        int yCoordinate = 480;
 
-        PaintUpdate update = new PaintUpdate(PaintUpdate.UPDATE_TYPE_ADD, 5, 6, 7, 20, 20, fakeImageData);
+        PaintUpdate update = new PaintUpdate(PaintUpdate.UPDATE_TYPE_ADD, updateID, layerID, canvasID, xCoordinate, yCoordinate, fakeImageData);
         collabProtocol.sendPaint(update);
 
         byte[] receivedData = outputStream.toByteArray();
         /*
          Expected result structure (parameters can be received in diffrend order):
          {4 ID} {4 data length} {4 PANT} {12 UDTY} {12 UDID} {12 LYID} {12 CNID} {12 XCOR} {12 YCOR} {x UIMG}
-
-         These data are expected:
-        
-         command:
-         80:65:78:84 = PANT
-
-         update type:
-         85:68:84:89 = UDTY
-         0:0:0:4 = 4 (integer)
-         0:0:0:0 = 0
-
-         Y coordinate:
-         85:68:73:68 = UDID
-         0:0:0:4 = 4 (integer)
-         0:0:0:5 = 5
-
-         76:89:73:68 = LYID
-         0:0:0:4
-         0:0:0:6
-
-         67:78:73:68 = CNID
-         0:0:0:4
-         0:0:0:7
-
-         88:67:79:82 = XCOR
-         0:0:0:4
-         0:0:0:20
-
-         89:67:79:82 = YCOR
-         0:0:0:4
-         0:0:0:20
-
-         85:73:77:71 = UIMG
-         0:0:0:5
-         0:1:2:3:5 = fakeImageData
          */
         
-        System.out.print("Received data are: ");
-        for (byte b : receivedData) {
-            System.out.print(":" + b);
-        }
-        System.out.println(":");
-
-        findAndTest("paint command", receivedData, new byte[] {80, 65, 78, 84}, new byte[0]);
-        findAndTest("x coordinate", receivedData, new byte[] {88, 67, 79, 82}, new byte[] {0, 0, 0, 4, 0, 0, 0, 20});
-        findAndTest("image data", receivedData, new byte[] {85, 73, 77, 71}, new byte[] {0, 0, 0, 5, 0, 1, 2, 3, 5});
+        // test for command 
+        findAndTestBlock("paint command", receivedData, new byte[]{80, 65, 78, 84}, new byte[0]);
+        
+        // tests for blocks
+        findAndTestBlock("image data", CollabProtocol.COMMAND_PAINT_BLOCK_UPDATE_IMAGE_DATA, receivedData, fakeImageData);
+        findAndTestBlock("X coordinate", CollabProtocol.COMMAND_PAINT_BLOCK_X_COORDINATE, receivedData, BinaryUtil.intToByteArray(xCoordinate));
+        findAndTestBlock("Y coordinate", CollabProtocol.COMMAND_PAINT_BLOCK_Y_COORDINATE, receivedData, BinaryUtil.intToByteArray(yCoordinate));
+        findAndTestBlock("update type", CollabProtocol.COMMAND_PAINT_BLOCK_UPDATE_TYPE, receivedData, BinaryUtil.intToByteArray(updateType));
+        findAndTestBlock("update ID", CollabProtocol.COMMAND_PAINT_BLOCK_UPDATE_ID, receivedData, BinaryUtil.intToByteArray(updateID));
+        findAndTestBlock("layer ID", CollabProtocol.COMMAND_PAINT_BLOCK_LAYER_ID, receivedData, BinaryUtil.intToByteArray(layerID));
+        findAndTestBlock("canvas ID", CollabProtocol.COMMAND_PAINT_BLOCK_CANVAS_ID, receivedData, BinaryUtil.intToByteArray(canvasID));
     }
 
-    protected void findAndTest(String blockName, byte[] data, byte[] prefix, byte[] expected) {        
+    /**
+     * Tests data if it contains particular block with specified value.
+     *
+     * @param blockName human readable name of the block. It's used for logging.
+     * @param prefix block name prefix (used in the protocol).
+     * @param data data which to search in.
+     * @param value expected value of the block.
+     */
+    protected void findAndTestBlock(String blockName, String prefix, byte[] data, byte[] value) {
+        byte[] expectedData = new byte[value.length + 4];
+        byte[] prefixBinary = BinaryUtil.asciiStringToByteArray(prefix);
+
+        System.arraycopy(BinaryUtil.intToByteArray(value.length), 0, expectedData, 0, 4);
+        System.arraycopy(value, 0, expectedData, 4, value.length);
+
+        findAndTestBlock(blockName, data, prefixBinary, expectedData);
+    }
+
+    /**
+     * Tests data if it contains particular block with specified data.
+     *
+     * @param blockName human readable name of the block. It's used for logging.
+     * @param data source data. This data will be tested for expected content.
+     * @param prefix prefix of the block. Data of block continues after prefix.
+     * @param expected expected block value.
+     */
+    protected void findAndTestBlock(String blockName, byte[] data, byte[] prefix, byte[] expected) {
         int index = subarrayIndex(data, prefix);
 
         assert index != -1 : "Data doesn't contaion block \"" + blockName + "\"!";
 
         int from = index + prefix.length;
         int to = from + expected.length;
+
         for (int i = from; i < to; i++) {
             assert (i < data.length && data[i] == expected[i - from]) : "Data of block \"" + blockName + "\" doesn't fit!";
         }
     }
 
+    /**
+     * Finds index of array inside of another array.
+     *
+     * @param source array which to search in
+     * @param target array whit to search for
+     * @return returns index in source array if target array has been founded or
+     * -1 if not
+     */
     protected int subarrayIndex(byte[] source, byte[] target) {
         int index = -1;
-        
+
         for (int i = 0; i < (source.length - target.length + 1) && index == -1; i++) {
             boolean fit = true;
-            
+
             for (int j = i; j < (i + target.length); j++) {
                 if (source[j] != target[j - i]) {
                     fit = false;
                 }
             }
-            
+
             if (fit) {
                 index = i;
             }
         }
-        
+
         return index;
     }
-
 }
